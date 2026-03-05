@@ -1,4 +1,4 @@
-from db_config import fetch_latest_records
+from src.db_config import fetch_latest_records
 import pandas as pd
 import numpy as np
 
