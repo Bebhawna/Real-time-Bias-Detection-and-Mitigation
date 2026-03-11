@@ -8,11 +8,11 @@ from psycopg2.extras import RealDictCursor, Json, execute_values
 from psycopg2 import pool
 
 DB_CONFIG = {
-    "host": os.getenv("PG_HOST", "localhost"),
+    "host": os.getenv("PG_HOST", "db.drbvdbpfgqhbnsryrmjp.supabase.co"),
     "port": os.getenv("PG_PORT", "5432"),
-    "dbname": os.getenv("PG_DBNAME", "bias_monitoring"),
+    "dbname": os.getenv("PG_DBNAME", "postgres"),
     "user": os.getenv("PG_USER", "postgres"),
-    "password": os.getenv("PG_PASSWORD", "Yogesh5173#"),
+    "password": os.getenv("PG_PASSWORD", "bias_monitoring_mp"),
 }
 
 
@@ -72,7 +72,7 @@ def insert_record(
     features = record["features"]
     prediction = record["prediction"]
     """
-    Insert a single record into the predictions_log table.
+    Insert a single record into the fairness_system.predictions_log table.
 
     Args:
         gender (str): Gender of person ('Male', 'Female', 'Other').
