@@ -5,7 +5,7 @@ import json
 from typing import Any, Dict, List, Optional
 import psycopg2
 from psycopg2.extras import RealDictCursor, Json, execute_values
-
+from psycopg2 import pool
 
 DB_CONFIG = {
     "host": "db.drbvdbpfgqhbnsryrmjp.supabase.co",
@@ -16,15 +16,42 @@ DB_CONFIG = {
 }
 
 
+connection_pool = psycopg2.pool.SimpleConnectionPool(
+    minconn=1,
+    maxconn=10,
+    host=DB_CONFIG["host"],
+    port=DB_CONFIG["port"],
+    dbname=DB_CONFIG["dbname"],
+    user=DB_CONFIG["user"],
+    password=DB_CONFIG["password"],
+)
+
+
+DB_SCHEMA = "fairness_system"
+
+
+# def get_connection():
+#     """
+#     Create and return a new PostgreSQL database connection.
+
+#     Returns:
+#         psycopg2.connection: A new database connection object.
+
+#     Raises:
+#         psycopg2.Error: If connection fails.
+#     """
+#     conn = psycopg2.connect(
+#         host=DB_CONFIG["host"],
+#         port=DB_CONFIG["port"],
+#         dbname=DB_CONFIG["dbname"],
+#         user=DB_CONFIG["user"],
+#         password=DB_CONFIG["password"],
+#     )
+#     return conn
+
 def get_connection():
     """
-    Create and return a new PostgreSQL database connection.
-
-    Returns:
-        psycopg2.connection: A new database connection object.
-
-    Raises:
-        psycopg2.Error: If connection fails.
+    Get a connection from the pool.
     """
     conn = psycopg2.connect(
         host=DB_CONFIG["host"],
@@ -36,6 +63,12 @@ def get_connection():
     return conn
 
 
+def release_connection(conn):
+    """
+    Return connection to the pool.
+    """
+    connection_pool.putconn(conn)
+
 def insert_record(
     record: Dict[str, Any],
     conn: Optional[psycopg2.extensions.connection] = None,
@@ -46,7 +79,7 @@ def insert_record(
     features = record["features"]
     prediction = record["prediction"]
     """
-    Insert a single record into the predictions_log table.
+    Insert a single record into the fairness_system.predictions_log table.
 
     Args:
         gender (str): Gender of person ('Male', 'Female', 'Other').
@@ -70,7 +103,7 @@ def insert_record(
     try:
         with conn.cursor() as cur:
             query = """
-                INSERT INTO predictions_log (gender, race, features, prediction)
+                INSERT INTO fairness_system.predictions_log (gender, race, features, prediction)
                 VALUES (%s, %s, %s, %s)
                 RETURNING id;
             """
@@ -91,7 +124,7 @@ def insert_record(
         raise
     finally:
         if owns_connection:
-            conn.close()
+            release_connection(conn)
 
 
 
@@ -124,7 +157,7 @@ def insert_multiple_records(
     try:
         with conn.cursor() as cur:
             query = """
-                INSERT INTO predictions_log (gender, race, features, prediction)
+                INSERT INTO fairness_system.predictions_log (gender, race, features, prediction)
                 VALUES %s
                 RETURNING id;
             """
@@ -148,7 +181,7 @@ def insert_multiple_records(
         raise
     finally:
         if owns_connection:
-            conn.close()
+            release_connection(conn)
 
 
 
@@ -180,7 +213,7 @@ def fetch_latest_records(
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             query = """
                 SELECT id, gender, race, features, prediction, timestamp
-                FROM predictions_log
+                FROM fairness_system.predictions_log
                 ORDER BY timestamp DESC
                 LIMIT %s;
             """
@@ -189,7 +222,95 @@ def fetch_latest_records(
         return list(rows)
     finally:
         if owns_connection:
-            conn.close()
+            release_connection(conn)
+
+
+def insert_final_record(
+    raw_id: int,
+    gender: str,
+    race: str,
+    features: Dict[str, Any],
+    prediction: int,
+    mitigation_applied: bool = False,
+    conn: Optional[psycopg2.extensions.connection] = None,
+) -> None:
+    """
+    Insert a cleaned or corrected record into final_predictions_log.
+
+    Args:
+        raw_id (int): ID of the RAW record from predictions_log.
+        gender (str): Gender.
+        race (str): Race group.
+        features (dict): JSON feature set.
+        prediction (int): Model prediction.
+        mitigation_applied (bool): Whether bias mitigation was applied.
+    """
+
+    owns_connection = False
+    if conn is None:
+        conn = get_connection()
+        owns_connection = True
+
+    try:
+        with conn.cursor() as cur:
+            query = """
+                INSERT INTO fairness_system.final_predictions_log
+                (raw_id, gender, race, features, prediction, mitigation_applied)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                ON CONFLICT (raw_id) DO NOTHING;
+            """
+
+            cur.execute(
+                query,
+                (
+                    raw_id,
+                    gender,
+                    race,
+                    Json(features),
+                    prediction,
+                    mitigation_applied,
+                ),
+            )
+
+            conn.commit()
+
+    except Exception:
+        conn.rollback()
+        raise
+
+    finally:
+        if owns_connection:
+            release_connection(conn)
+
+
+def fetch_final_records(
+    n: int,
+    conn: Optional[psycopg2.extensions.connection] = None,
+) -> List[Dict[str, Any]]:
+    
+    owns_connection = False
+    if conn is None:
+        conn = get_connection()
+        owns_connection = True
+
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+
+            query = """
+                SELECT *
+                FROM fairness_system.final_predictions_log
+                ORDER BY timestamp DESC
+                LIMIT %s;
+            """
+
+            cur.execute(query, (n,))
+            rows = cur.fetchall()
+
+        return list(rows)
+
+    finally:
+        if owns_connection:
+            release_connection(conn)
 
 
 if __name__ == "__main__":
@@ -210,7 +331,7 @@ if __name__ == "__main__":
     # latest = fetch_latest_records(5, conn=conn)
     # print("Latest records:", latest)
     
-    # conn.close()
+    # release_connection(conn)
     
     # Example usage for multiple insert:
     # test_records = [

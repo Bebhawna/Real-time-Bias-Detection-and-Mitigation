@@ -1,0 +1,5 @@
+Host: db.drbvdbpfgqhbnsryrmjp.supabase.co
+Port: 5432
+Database: postgres
+User: postgres
+Password: bias_monitoring_mp
