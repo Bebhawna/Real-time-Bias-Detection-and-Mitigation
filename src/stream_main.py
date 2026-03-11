@@ -14,8 +14,8 @@ def decode_race(row):
     return "Unknown"
 
 def main():
-    model = joblib.load("../models/income_model.pkl")
-    df = pd.read_csv("../data/stream.csv")
+    model = joblib.load("models/income_model.pkl")
+    df = pd.read_csv("data/stream.csv")
 
     print("Streaming started...")
 

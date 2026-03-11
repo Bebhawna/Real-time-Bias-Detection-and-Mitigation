@@ -8,11 +8,11 @@ from psycopg2.extras import RealDictCursor, Json, execute_values
 
 
 DB_CONFIG = {
-    "host": os.getenv("PG_HOST", "localhost"),
-    "port": os.getenv("PG_PORT", "5432"),
-    "dbname": os.getenv("PG_DBNAME", "bias_monitoring"),
-    "user": os.getenv("PG_USER", "postgres"),
-    "password": os.getenv("PG_PASSWORD", "Yogesh5173#"),
+    "host": "db.drbvdbpfgqhbnsryrmjp.supabase.co",
+    "database": "postgres",
+    "user": "postgres",
+    "password": "bias_monitoring_mp",
+    "port": 5432
 }
 
 
@@ -29,7 +29,7 @@ def get_connection():
     conn = psycopg2.connect(
         host=DB_CONFIG["host"],
         port=DB_CONFIG["port"],
-        dbname=DB_CONFIG["dbname"],
+        dbname=DB_CONFIG["database"],
         user=DB_CONFIG["user"],
         password=DB_CONFIG["password"],
     )
