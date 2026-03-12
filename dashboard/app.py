@@ -130,8 +130,8 @@ def compute_metrics_over_time(df, step=10):
 
     return metrics_df
 
-raw_df = fetch_latest_records()
-final_df = fetch_final_records()
+raw_df = pd.DataFrame(fetch_latest_records(WINDOW_SIZE))
+final_df = pd.DataFrame(fetch_final_records(WINDOW_SIZE))
 
 
 raw_metrics = compute_metrics_over_time(raw_df)
@@ -169,30 +169,6 @@ if abs(dpd_final) < abs(dpd_raw):
     st.success("✔ Mitigation improved fairness")
 else:
     st.warning("Mitigation not improving fairness yet")
-
-# -----------------------------
-# DPD TREND GRAPH
-# -----------------------------
-
-import pandas as pd
-
-dpd_df = pd.DataFrame({
-    "Step": [1, 2],
-    "RAW_DPD": [dpd_raw, dpd_raw],
-    "FINAL_DPD": [dpd_raw, dpd_final]
-})
-
-di_df = pd.DataFrame({
-    "Step": [1, 2],
-    "RAW_DI": [di_raw, di_raw],
-    "FINAL_DI": [di_raw, di_final]
-})
-
-st.subheader("DPD Over Time")
-st.line_chart(dpd_df.set_index("Step"))
-
-st.subheader("DI Over Time")
-st.line_chart(di_df.set_index("Step"))
 
 # -----------------------------
 # LATEST RECORDS TABLE
