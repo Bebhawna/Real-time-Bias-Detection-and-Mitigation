@@ -14,7 +14,7 @@ DB_CONFIG = {
     "user": os.getenv("PG_USER", "postgres"),
     "password": os.getenv("PG_PASSWORD", "bias_monitoring_mp"),
 }
-
+ 
 
 connection_pool = psycopg2.pool.SimpleConnectionPool(
     minconn=1,
