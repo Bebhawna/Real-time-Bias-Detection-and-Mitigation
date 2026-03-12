@@ -8,11 +8,11 @@ from psycopg2.extras import RealDictCursor, Json, execute_values
 from psycopg2 import pool
 
 DB_CONFIG = {
-    "host": "db.drbvdbpfgqhbnsryrmjp.supabase.co",
-    "database": "postgres",
-    "user": "postgres",
-    "password": "bias_monitoring_mp",
-    "port": 5432
+    "host": os.getenv("PG_HOST", "db.drbvdbpfgqhbnsryrmjp.supabase.co"),
+    "port": os.getenv("PG_PORT", "5432"),
+    "dbname": os.getenv("PG_DBNAME", "postgres"),
+    "user": os.getenv("PG_USER", "postgres"),
+    "password": os.getenv("PG_PASSWORD", "bias_monitoring_mp"),
 }
  
 
@@ -21,7 +21,7 @@ connection_pool = psycopg2.pool.SimpleConnectionPool(
     maxconn=10,
     host=DB_CONFIG["host"],
     port=DB_CONFIG["port"],
-    dbname=DB_CONFIG["database"],
+    dbname=DB_CONFIG["dbname"],
     user=DB_CONFIG["user"],
     password=DB_CONFIG["password"],
 )
@@ -29,37 +29,10 @@ connection_pool = psycopg2.pool.SimpleConnectionPool(
 
 DB_SCHEMA = "fairness_system"
 
-
-# def get_connection():
-#     """
-#     Create and return a new PostgreSQL database connection.
-
-#     Returns:
-#         psycopg2.connection: A new database connection object.
-
-#     Raises:
-#         psycopg2.Error: If connection fails.
-#     """
-#     conn = psycopg2.connect(
-#         host=DB_CONFIG["host"],
-#         port=DB_CONFIG["port"],
-#         dbname=DB_CONFIG["dbname"],
-#         user=DB_CONFIG["user"],
-#         password=DB_CONFIG["password"],
-#     )
-#     return conn
-
 def get_connection():
     """
     Get a connection from the pool.
     """
-    conn = psycopg2.connect(
-        host=DB_CONFIG["host"],
-        port=DB_CONFIG["port"],  
-        dbname=DB_CONFIG["database"],
-        user=DB_CONFIG["user"],
-        password=DB_CONFIG["password"],
-    )
     return connection_pool.getconn()
 
 
@@ -112,7 +85,7 @@ def insert_record(
                 (
                     gender,
                     race,
-                    Json(features),  # psycopg2 will handle JSONB conversion
+                    Json(features), 
                     prediction,
                 ),
             )
