@@ -19,85 +19,6 @@ import plotly.express as px
 st.set_page_config(page_title="AI Bias Monitoring Dashboard", layout="wide")
 
 st.title("AI Bias Detection & Mitigation Monitoring")
-# st_autorefresh(interval=5000, key="datarefresh")
-
-# WINDOW_SIZE = 100
-
-# if "dpd_history" not in st.session_state:
-#     st.session_state.dpd_history = []
-
-# if "di_history" not in st.session_state:
-#     st.session_state.di_history = []
-
-# if "timestamps" not in st.session_state:
-#     st.session_state.timestamps = []
-
-# placeholder = st.empty()
-
-# while True:
-
-#     records = fetch_latest_records(WINDOW_SIZE)
-
-#     if records:
-
-#         df = pd.DataFrame(records)
-
-#         metrics = compute_fairness_metrics(df,
-#                                            group_col="race",
-#                                            positive_col="prediction")
-
-#         dpd = metrics["demographic_parity_difference"]
-#         di = metrics["disparate_impact"]
-
-#         now = datetime.now().strftime("%H:%M:%S")
-
-#         st.session_state.dpd_history.append(dpd)
-#         st.session_state.di_history.append(di)
-#         st.session_state.timestamps.append(now)
-
-#         with placeholder.container():
-
-#             col1, col2 = st.columns(2)
-
-#             with col1:
-#                 st.metric("Demographic Parity Difference", round(dpd, 4))
-
-#             with col2:
-#                 st.metric("Disparate Impact", round(di, 4))
-
-#             st.subheader("DPD Trend")
-
-#             dpd_df = pd.DataFrame({
-#                 "Time": st.session_state.timestamps,
-#                 "DPD": st.session_state.dpd_history
-#             })
-
-#             fig1 = px.line(dpd_df, x="Time", y="DPD")
-#             st.plotly_chart(fig1, use_container_width=True)
-
-#             st.subheader("DI Trend")
-
-#             di_df = pd.DataFrame({
-#                 "Time": st.session_state.timestamps,
-#                 "DI": st.session_state.di_history
-#             })
-
-#             fig2 = px.line(di_df, x="Time", y="DI")
-#             st.plotly_chart(fig2, use_container_width=True)
-
-#             st.subheader("Latest Predictions")
-
-#             st.dataframe(df.tail(10))
-
-#             st.subheader("Mitigation Status")
-
-#             if dpd < 0.1 and di > 0.8:
-#                 st.success("Mitigation working correctly")
-#             else:
-#                 st.warning("Potential bias detected")
-
-#     time.sleep(5)
-
 
 import streamlit as st
 import pandas as pd
@@ -196,57 +117,76 @@ else:
 # -----------------------------
 # DPD TREND GRAPH
 # -----------------------------
-st.subheader("DPD Over Time")
+# st.subheader("DPD Over Time")
 
-dpd_trend = pd.DataFrame({
-    "RAW_DPD": [compute_dpd(raw_df)],
-    "FINAL_DPD": [compute_dpd(final_df)]
-})
+# dpd_trend = pd.DataFrame({
+#     "RAW_DPD": [compute_dpd(raw_df)],
+#     "FINAL_DPD": [compute_dpd(final_df)]
+# })
 
 # st.line_chart(dpd_trend)
+
+# import pandas as pd
+
+# dpd_df = pd.DataFrame({
+#     "Type": ["RAW", "FINAL"],
+#     "DPD": [dpd_raw, dpd_final]
+# })
+
+
+# st.subheader("DPD Comparison")
+# st.bar_chart(dpd_df.set_index("Type"))
+
+
+# st.write("RAW rows:", len(raw_df))
+# st.write("FINAL rows:", len(final_df))
+
 
 import pandas as pd
 
 dpd_df = pd.DataFrame({
-    "Type": ["RAW", "FINAL"],
-    "DPD": [dpd_raw, dpd_final]
+    "Step": [1, 2],
+    "RAW_DPD": [dpd_raw, dpd_raw],
+    "FINAL_DPD": [dpd_raw, dpd_final]
 })
 
+di_df = pd.DataFrame({
+    "Step": [1, 2],
+    "RAW_DI": [di_raw, di_raw],
+    "FINAL_DI": [di_raw, di_final]
+})
 
-st.subheader("DPD Comparison")
-st.bar_chart(dpd_df.set_index("Type"))
+st.subheader("DPD Over Time")
+st.line_chart(dpd_df.set_index("Step"))
 
+st.subheader("DI Over Time")
+st.line_chart(di_df.set_index("Step"))
 
-st.write("RAW rows:", len(raw_df))
-st.write("FINAL rows:", len(final_df))
+# st.write("RAW DPD values:", dpd_raw)
+# st.write("FINAL DPD values:", dpd_final)
 
+# st.write("RAW DI values:", di_raw)
+# st.write("FINAL DI values:", di_final)
 
-
-st.write("RAW DPD values:", dpd_raw)
-st.write("FINAL DPD values:", dpd_final)
-
-st.write("RAW DI values:", di_raw)
-st.write("FINAL DI values:", di_final)
-
-st.write(raw_df.groupby("gender")["prediction"].mean())
+# st.write(raw_df.groupby("gender")["prediction"].mean())
 # -----------------------------
 # DI TREND GRAPH
 # -----------------------------
-st.subheader("DI Over Time")
+# st.subheader("DI Over Time")
 
-di_trend = pd.DataFrame({
-    "RAW_DI": [compute_di(raw_df)],
-    "FINAL_DI": [compute_di(final_df)]
-})
+# di_trend = pd.DataFrame({
+#     "RAW_DI": [compute_di(raw_df)],
+#     "FINAL_DI": [compute_di(final_df)]
+# })
 
-# st.line_chart(di_trend)
-di_df = pd.DataFrame({
-    "Type": ["RAW", "FINAL"],
-    "DI": [di_raw, di_final]
-})
+# # st.line_chart(di_trend)
+# di_df = pd.DataFrame({
+#     "Type": ["RAW", "FINAL"],
+#     "DI": [di_raw, di_final]
+# })
 
-st.subheader("DI Comparison")
-st.bar_chart(di_df.set_index("Type"))
+# st.subheader("DI Comparison")
+# st.bar_chart(di_df.set_index("Type"))
 # -----------------------------
 # LATEST RECORDS TABLE
 # -----------------------------
@@ -273,25 +213,6 @@ st.table(comparison)
 st.caption("Live bias monitoring system with automatic mitigation.")
 
 
-import pandas as pd
-
-dpd_df = pd.DataFrame({
-    "Step": [1, 2],
-    "RAW_DPD": [dpd_raw, dpd_raw],
-    "FINAL_DPD": [dpd_raw, dpd_final]
-})
-
-di_df = pd.DataFrame({
-    "Step": [1, 2],
-    "RAW_DI": [di_raw, di_raw],
-    "FINAL_DI": [di_raw, di_final]
-})
-
-st.subheader("DPD Over Time")
-st.line_chart(dpd_df.set_index("Step"))
-
-st.subheader("DI Over Time")
-st.line_chart(di_df.set_index("Step"))
 
 
 st.subheader("Fairness Improvement Check")
