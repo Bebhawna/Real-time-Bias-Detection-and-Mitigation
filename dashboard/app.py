@@ -11,7 +11,7 @@ import pandas as pd
 import time
 from datetime import datetime
 
-from src.db_config import fetch_latest_records
+# from src.db_config import fetch_latest_record s
 from src.fairness_matrics import compute_fairness_metrics
 
 import plotly.express as px
@@ -61,7 +61,7 @@ if raw_df.empty or final_df.empty:
     st.stop()
 
 # -----------------------------
-# FAIRNESS METRIC FUNCTIONS
+# FAIRNESS METRIC FUNCTION S
 # -----------------------------
 def compute_dpd(df):
     """
@@ -98,6 +98,62 @@ col2.metric("DPD (FINAL)", round(dpd_final, 3))
 
 col3.metric("DI (RAW)", round(di_raw, 3))
 col4.metric("DI (FINAL)", round(di_final, 3))
+
+
+
+# -----------------------------
+# Function to compute metrics overtime
+# -----------------------------
+
+import pandas as pd
+
+def compute_metrics_over_time(df, step=10):
+    dpd_values = []
+    di_values = []
+    steps = []
+
+    for i in range(step, len(df) + 1, step):
+        subset = df.iloc[:i]
+
+        dpd = compute_dpd(subset)
+        di = compute_di(subset)
+
+        dpd_values.append(dpd)
+        di_values.append(di)
+        steps.append(i)
+
+    metrics_df = pd.DataFrame({
+        "records_processed": steps,
+        "dpd": dpd_values,
+        "di": di_values
+    })
+
+    return metrics_df
+
+raw_df = fetch_latest_records()
+final_df = fetch_final_records()
+
+
+raw_metrics = compute_metrics_over_time(raw_df)
+final_metrics = compute_metrics_over_time(final_df)
+
+st.subheader("DPD Over Time")
+
+dpd_plot = pd.DataFrame({
+    "RAW_DPD": raw_metrics["dpd"],
+    "FINAL_DPD": final_metrics["dpd"]
+})
+
+st.line_chart(dpd_plot)
+
+st.subheader("DI Over Time")
+
+di_plot = pd.DataFrame({
+    "RAW_DI": raw_metrics["di"],
+    "FINAL_DI": final_metrics["di"]
+})
+
+st.line_chart(di_plot)
 
 # -----------------------------
 # MITIGATION INDICATOR
@@ -176,4 +232,4 @@ else:
 if abs(1 - di_final) < abs(1 - di_raw):
     st.success("✅ DI Improved After Mitigation")
 else:
-    st.error("❌ DI Worse After Mitigation")
+    st.error("❌ DI Worse After Mitigation") 
