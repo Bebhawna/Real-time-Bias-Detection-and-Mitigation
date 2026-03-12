@@ -117,30 +117,6 @@ else:
 # -----------------------------
 # DPD TREND GRAPH
 # -----------------------------
-# st.subheader("DPD Over Time")
-
-# dpd_trend = pd.DataFrame({
-#     "RAW_DPD": [compute_dpd(raw_df)],
-#     "FINAL_DPD": [compute_dpd(final_df)]
-# })
-
-# st.line_chart(dpd_trend)
-
-# import pandas as pd
-
-# dpd_df = pd.DataFrame({
-#     "Type": ["RAW", "FINAL"],
-#     "DPD": [dpd_raw, dpd_final]
-# })
-
-
-# st.subheader("DPD Comparison")
-# st.bar_chart(dpd_df.set_index("Type"))
-
-
-# st.write("RAW rows:", len(raw_df))
-# st.write("FINAL rows:", len(final_df))
-
 
 import pandas as pd
 
@@ -162,31 +138,6 @@ st.line_chart(dpd_df.set_index("Step"))
 st.subheader("DI Over Time")
 st.line_chart(di_df.set_index("Step"))
 
-# st.write("RAW DPD values:", dpd_raw)
-# st.write("FINAL DPD values:", dpd_final)
-
-# st.write("RAW DI values:", di_raw)
-# st.write("FINAL DI values:", di_final)
-
-# st.write(raw_df.groupby("gender")["prediction"].mean())
-# -----------------------------
-# DI TREND GRAPH
-# -----------------------------
-# st.subheader("DI Over Time")
-
-# di_trend = pd.DataFrame({
-#     "RAW_DI": [compute_di(raw_df)],
-#     "FINAL_DI": [compute_di(final_df)]
-# })
-
-# # st.line_chart(di_trend)
-# di_df = pd.DataFrame({
-#     "Type": ["RAW", "FINAL"],
-#     "DI": [di_raw, di_final]
-# })
-
-# st.subheader("DI Comparison")
-# st.bar_chart(di_df.set_index("Type"))
 # -----------------------------
 # LATEST RECORDS TABLE
 # -----------------------------
