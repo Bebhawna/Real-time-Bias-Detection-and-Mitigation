@@ -21,7 +21,7 @@ connection_pool = psycopg2.pool.SimpleConnectionPool(
     maxconn=10,
     host=DB_CONFIG["host"],
     port=DB_CONFIG["port"],
-    dbname=DB_CONFIG["dbname"],
+    dbname=DB_CONFIG["database"],
     user=DB_CONFIG["user"],
     password=DB_CONFIG["password"],
 )
@@ -55,12 +55,12 @@ def get_connection():
     """
     conn = psycopg2.connect(
         host=DB_CONFIG["host"],
-        port=DB_CONFIG["port"],
+        port=DB_CONFIG["port"],  
         dbname=DB_CONFIG["database"],
         user=DB_CONFIG["user"],
         password=DB_CONFIG["password"],
     )
-    return conn
+    return connection_pool.getconn()
 
 
 def release_connection(conn):
