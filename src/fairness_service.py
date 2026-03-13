@@ -1,6 +1,6 @@
-rom fastapi import FastAPI
+from fastapi import FastAPI
 from src.db_config import fetch_latest_records
-from src.fairness_metrics import compute_fairness_metrics
+from src.fairness_matrics import compute_fairness_metrics
 import pandas as pd
 
 app = FastAPI()
