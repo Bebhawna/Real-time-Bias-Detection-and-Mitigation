@@ -24,6 +24,7 @@ connection_pool = psycopg2.pool.SimpleConnectionPool(
     dbname=DB_CONFIG["dbname"],
     user=DB_CONFIG["user"],
     password=DB_CONFIG["password"],
+    sslmode="require"               #new commit here
 )
 
 
