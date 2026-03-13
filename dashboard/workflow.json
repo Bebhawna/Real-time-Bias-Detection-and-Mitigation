@@ -1,0 +1,108 @@
+{
+  "name": "Bias Detection & Mitigation Pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "mode": "everyX",
+              "value": 10,
+              "unit": "seconds"
+            }
+          ]
+        }
+      },
+      "id": "cron_trigger",
+      "name": "Cron Trigger",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:8000/fairness",
+        "options": {},
+        "responseFormat": "json"
+      },
+      "id": "fairness_request",
+      "name": "Get Fairness Metrics",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [400, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{$json[\"di\"]}}",
+              "operation": "smaller",
+              "value2": 0.8
+            },
+            {
+              "value1": "={{$json[\"dpd\"]}}",
+              "operation": "larger",
+              "value2": 0.2
+            }
+          ]
+        },
+        "combineOperation": "any"
+      },
+      "id": "bias_check",
+      "name": "Bias Check",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [600, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:8001/mitigate",
+        "method": "POST",
+        "options": {},
+        "responseFormat": "json"
+      },
+      "id": "mitigation_call",
+      "name": "Run Mitigation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [800, 200]
+    }
+  ],
+  "connections": {
+    "Cron Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Fairness Metrics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Fairness Metrics": {
+      "main": [
+        [
+          {
+            "node": "Bias Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bias Check": {
+      "main": [
+        [
+          {
+            "node": "Run Mitigation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  }
+}
