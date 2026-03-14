@@ -1,6 +1,6 @@
 from fastapi import FastAPI
-from mitigation import apply_mitigation
-from db_config import fetch_latest_records, insert_final_record
+from src.mitigation import apply_mitigation
+from src.db_config import fetch_latest_records, insert_final_record
 
 app = FastAPI()
 
