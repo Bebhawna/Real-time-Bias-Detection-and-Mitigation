@@ -25,7 +25,77 @@
 #     return record
 
 
-def apply_mitigation(record):
+
+
+
+
+
+
+
+
+# def apply_mitigation(record):
+
+#     required_fields = ["id", "gender", "race", "prediction"]
+#     for field in required_fields:
+
+#         if field not in record:
+#             raise ValueError(f"Missing field: {field}")
+
+#     gender = record["gender"].lower()
+#     race = record["race"].lower()
+#     prediction = record["prediction"]
+
+#     # store original prediction
+#     record["original_prediction"] = prediction
+
+#     mitigation_applied = False
+
+#     # define groups
+#     disadvantaged = False
+#     majority = False
+
+#     if gender == "female" or race == "minority":
+#         disadvantaged = True
+
+#     if gender == "male" and race == "majority":
+#         majority = True
+
+#     # ---------- mitigation logic ----------
+
+#     # case 1: disadvantaged group with negative prediction
+#     if disadvantaged and prediction == 0:
+#         record["prediction"] = 1
+#         mitigation_applied = True
+#         record["mitigation_reason"] = "increase_positive_for_disadvantaged"
+
+#     # case 2: majority group with positive prediction (optional balancing)
+#     elif majority and prediction == 1:
+#         # reduce advantage slightly
+#         record["prediction"] = 1   # keep same or change to 0 if needed
+#         record["mitigation_reason"] = "checked_majority_bias"
+
+#     # store group type
+#     if disadvantaged:
+#         record["group_type"] = "disadvantaged"
+#     elif majority:
+#         record["group_type"] = "majority"
+#     else:
+#         record["group_type"] = "other"
+
+#     record["mitigation_applied"] = mitigation_applied
+
+#     return record
+
+
+
+
+
+
+
+
+
+
+def apply_mitigation(record, stats):
 
     required_fields = ["id", "gender", "race", "prediction"]
     for field in required_fields:
@@ -36,42 +106,31 @@ def apply_mitigation(record):
     race = record["race"].lower()
     prediction = record["prediction"]
 
-    # store original prediction
     record["original_prediction"] = prediction
 
     mitigation_applied = False
 
-    # define groups
-    disadvantaged = False
-    majority = False
+    minority_rate = stats["minority_positive_rate"]
+    majority_rate = stats["majority_positive_rate"]
 
-    if gender == "female" or race == "minority":
-        disadvantaged = True
+    disadvantaged = (gender == "female" or race == "minority")
+    majority = (gender == "male" and race == "majority")
 
-    if gender == "male" and race == "majority":
-        majority = True
+    # ---------- FAIRNESS CORRECTION ----------
 
-    # ---------- mitigation logic ----------
-
-    # case 1: disadvantaged group with negative prediction
+    # minority getting fewer positives → increase
     if disadvantaged and prediction == 0:
-        record["prediction"] = 1
-        mitigation_applied = True
-        record["mitigation_reason"] = "increase_positive_for_disadvantaged"
+        if minority_rate < majority_rate:
+            record["prediction"] = 1
+            mitigation_applied = True
+            record["mitigation_reason"] = "increase_minority_positive"
 
-    # case 2: majority group with positive prediction (optional balancing)
+    # majority getting too many positives → reduce
     elif majority and prediction == 1:
-        # reduce advantage slightly
-        record["prediction"] = 1   # keep same or change to 0 if needed
-        record["mitigation_reason"] = "checked_majority_bias"
-
-    # store group type
-    if disadvantaged:
-        record["group_type"] = "disadvantaged"
-    elif majority:
-        record["group_type"] = "majority"
-    else:
-        record["group_type"] = "other"
+        if majority_rate > minority_rate:
+            record["prediction"] = 0
+            mitigation_applied = True
+            record["mitigation_reason"] = "reduce_majority_positive"
 
     record["mitigation_applied"] = mitigation_applied
 
