@@ -204,7 +204,7 @@ def apply_mitigation(records):
     total = gender_stats[disadvantaged_gender]["total"]
     current_positive = gender_stats[disadvantaged_gender]["positive"]
 
-    target_positive = int(target_rate * total)
+    target_positive = int(target_rate * total * 0.8)
     flips_needed = max(target_positive - current_positive, 0)
 
     candidates = [
