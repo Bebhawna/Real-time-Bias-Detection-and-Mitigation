@@ -32,7 +32,7 @@ from src.db_config import (
 # -----------------------------
 # CONFIG
 # -----------------------------
-WINDOW_SIZE = 100
+WINDOW_SIZE = 500
 
 # -----------------------------
 # AUTO REFRESH (LIVE DASHBOARD)

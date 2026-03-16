@@ -56,7 +56,7 @@ app = FastAPI()
 def mitigation_pipeline():
 
     # 1. fetch records from RAW table
-    records = fetch_latest_records(100)
+    records = fetch_latest_records(500)
 
     if not records:
         return {"status": "no_data"}
