@@ -199,6 +199,50 @@ def fetch_latest_records(
             release_connection(conn)
 
 
+# in batch of 100
+
+# def fetch_latest_records(
+#     batch_size: int = 100,
+#     offset: int = 0,
+#     conn: Optional[psycopg2.extensions.connection] = None,
+# ) -> List[Dict[str, Any]]:
+#     """
+#     Fetch records from predictions_log in batches.
+
+#     Args:
+#         batch_size (int): Number of rows per batch.
+#         offset (int): Number of rows to skip (for pagination).
+#         conn (connection, optional): Existing DB connection.
+
+#     Returns:
+#         List[Dict[str, Any]]: Batch of records.
+#     """
+
+#     owns_connection = False
+#     if conn is None:
+#         conn = get_connection()
+#         owns_connection = True
+
+#     try:
+#         with conn.cursor(cursor_factory=RealDictCursor) as cur:
+
+#             query = """
+#                 SELECT id, gender, race, features, prediction, timestamp
+#                 FROM fairness_system.predictions_log
+#                 ORDER BY timestamp ASC
+#                 LIMIT %s OFFSET %s;
+#             """
+
+#             cur.execute(query, (batch_size, offset))
+#             rows = cur.fetchall()
+
+#         return list(rows)
+
+#     finally:
+#         if owns_connection:
+#             release_connection(conn)
+            
+
 def insert_final_record(
     raw_id: int,
     gender: str,
