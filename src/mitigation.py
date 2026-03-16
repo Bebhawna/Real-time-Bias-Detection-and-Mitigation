@@ -199,12 +199,12 @@ def apply_mitigation(records):
     disadvantaged_gender = min(gender_rates, key=gender_rates.get)
     advantaged_gender = max(gender_rates, key=gender_rates.get)
 
-    target_rate = gender_rates[advantaged_gender]
+    target_rate = gender_rates[advantaged_gender] *0.8
 
     total = gender_stats[disadvantaged_gender]["total"]
     current_positive = gender_stats[disadvantaged_gender]["positive"]
 
-    target_positive = int(target_rate * total * 0.8)
+    target_positive = int(target_rate * total)
     flips_needed = max(target_positive - current_positive, 0)
 
     candidates = [
@@ -236,12 +236,12 @@ def apply_mitigation(records):
         if race_group == advantaged_race:
             continue
 
-        target_rate = race_rates[advantaged_race]
+        target_rate = race_rates[advantaged_race]*0.8
 
         total = race_stats[race_group]["total"]
         current_positive = race_stats[race_group]["positive"]
 
-        target_positive = int(target_rate * total * 0.8)
+        target_positive = int(target_rate * total)
         flips_needed = max(target_positive - current_positive, 0)
 
         candidates = [
