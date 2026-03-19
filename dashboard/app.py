@@ -6,12 +6,12 @@ sys.path.append(project_root)
 
 
 import streamlit as st
-# from streamlit_autorefresh import st_autorefresh
+from streamlit_autorefresh import st_autorefresh
 import pandas as pd
 import time
 from datetime import datetime
 
-# from src.db_config import fetch_latest_record s
+
 from src.fairness_matrics import compute_fairness_metrics
 
 import plotly.express as px
@@ -32,7 +32,7 @@ from src.db_config import (
 # -----------------------------
 # CONFIG
 # -----------------------------
-WINDOW_SIZE = 500
+WINDOW_SIZE = 100
 
 # -----------------------------
 # AUTO REFRESH (LIVE DASHBOARD)
@@ -60,31 +60,50 @@ if raw_df.empty or final_df.empty:
     st.warning("No streaming data available yet...")
     st.stop()
 
+
 # -----------------------------
-# FAIRNESS METRIC FUNCTION S
+# FAIRNESS METRIC FUNCTIONS
 # -----------------------------
-def compute_dpd(df):
+
+def compute_dpd(df, column):
     """
     Demographic Parity Difference
     """
-    rates = df.groupby("gender")["prediction"].mean()
+    rates = df.groupby(column)["prediction"].mean()
     return rates.max() - rates.min()
 
-def compute_di(df):
+
+def compute_di(df, column):
     """
     Disparate Impact
     """
-    rates = df.groupby("gender")["prediction"].mean()
+    rates = df.groupby(column)["prediction"].mean()
+
+    if rates.max() == 0:
+        return 0
+
     return rates.min() / rates.max()
+
 
 # -----------------------------
 # CALCULATE FAIRNESS
 # -----------------------------
-dpd_raw = compute_dpd(raw_df)
-dpd_final = compute_dpd(final_df)
 
-di_raw = compute_di(raw_df)
-di_final = compute_di(final_df)
+dpd_gender_raw = compute_dpd(raw_df, "gender")
+dpd_gender_final = compute_dpd(final_df, "gender")
+
+di_gender_raw = compute_di(raw_df, "gender")
+di_gender_final = compute_di(final_df, "gender")
+
+
+dpd_race_raw = compute_dpd(raw_df, "race")
+dpd_race_final = compute_dpd(final_df, "race")
+
+di_race_raw = compute_di(raw_df, "race")
+di_race_final = compute_di(final_df, "race")
+
+
+
 
 # -----------------------------
 # METRIC DISPLAY
@@ -93,11 +112,11 @@ st.subheader("Fairness Metrics")
 
 col1, col2, col3, col4 = st.columns(4)
 
-col1.metric("DPD (RAW)", round(dpd_raw, 3))
-col2.metric("DPD (FINAL)", round(dpd_final, 3))
+col1.metric("DPD (RAW)", round(dpd_gender_raw, 3))
+col2.metric("DPD (FINAL)", round(dpd_gender_final, 3))
 
-col3.metric("DI (RAW)", round(di_raw, 3))
-col4.metric("DI (FINAL)", round(di_final, 3))
+col3.metric("DI (RAW)", round(di_gender_raw, 3))
+col4.metric("DI (FINAL)", round(di_gender_final, 3))
 
 
 
@@ -107,7 +126,7 @@ col4.metric("DI (FINAL)", round(di_final, 3))
 
 import pandas as pd
 
-def compute_metrics_over_time(df, step=10):
+def compute_metrics_over_time(df, column, step=10):
     dpd_values = []
     di_values = []
     steps = []
@@ -115,8 +134,8 @@ def compute_metrics_over_time(df, step=10):
     for i in range(step, len(df) + 1, step):
         subset = df.iloc[:i]
 
-        dpd = compute_dpd(subset)
-        di = compute_di(subset)
+        dpd = compute_dpd(subset,column)
+        di = compute_di(subset,column)
 
         dpd_values.append(dpd)
         di_values.append(di)
@@ -134,38 +153,56 @@ raw_df = pd.DataFrame(fetch_latest_records(WINDOW_SIZE))
 final_df = pd.DataFrame(fetch_final_records(WINDOW_SIZE))
 
 
-raw_metrics = compute_metrics_over_time(raw_df)
-final_metrics = compute_metrics_over_time(final_df)
+raw_metrics_gender = compute_metrics_over_time(raw_df,"gender")
+final_metrics_gender = compute_metrics_over_time(final_df,"gender")
+
+raw_metrics_race = compute_metrics_over_time(raw_df,"race")
+final_metrics_race = compute_metrics_over_time(final_df,"race")
 
 st.subheader("DPD Over Time")
 
-dpd_plot = pd.DataFrame({
-    "RAW_DPD": raw_metrics["dpd"],
-    "FINAL_DPD": final_metrics["dpd"]
+dpd_plot_gender = pd.DataFrame({
+    "RAW_DPD": raw_metrics_gender["dpd"],
+    "FINAL_DPD": final_metrics_gender["dpd"]
 })
 
-st.line_chart(dpd_plot)
+dpd_plot_race = pd.DataFrame({
+    "RAW_DPD": raw_metrics_race["dpd"],
+    "FINAL_DPD": final_metrics_race["dpd"]
+})
+
+st.line_chart(dpd_plot_gender)
+# st.line_chart(dpd_plot_race)
+
 
 st.subheader("DI Over Time")
 
-di_plot = pd.DataFrame({
-    "RAW_DI": raw_metrics["di"],
-    "FINAL_DI": final_metrics["di"]
+di_plot_gender = pd.DataFrame({
+    "RAW_DI": raw_metrics_gender["di"],
+    "FINAL_DI": final_metrics_gender["di"]
 })
 
-st.line_chart(di_plot)
+di_plot_race = pd.DataFrame({
+    "RAW_DI": raw_metrics_race["di"],
+    "FINAL_DI": final_metrics_race["di"]
+})
+
+st.line_chart(di_plot_gender)
+
+
+# st.line_chart(di_plot_race)
 
 # -----------------------------
 # MITIGATION INDICATOR
 # -----------------------------
 st.subheader("Mitigation Status")
 
-if abs(dpd_raw) > 0.1:
+if abs(dpd_gender_raw) > 0.05:
     st.error("⚠ Bias detected in RAW predictions")
 else:
     st.success("RAW predictions are within fairness threshold")
 
-if abs(dpd_final) < abs(dpd_raw):
+if abs(dpd_gender_final) < abs(dpd_gender_raw):
     st.success("✔ Mitigation improved fairness")
 else:
     st.warning("Mitigation not improving fairness yet")
@@ -184,8 +221,8 @@ st.subheader("Before vs After Mitigation")
 
 comparison = pd.DataFrame({
     "Metric": ["DPD", "DI"],
-    "RAW": [dpd_raw, di_raw],
-    "FINAL": [dpd_final, di_final]
+    "RAW": [dpd_gender_raw, di_gender_raw],
+    "FINAL": [dpd_gender_final, di_gender_final]
 })
 
 st.table(comparison)
@@ -196,16 +233,14 @@ st.table(comparison)
 st.caption("Live bias monitoring system with automatic mitigation.")
 
 
-
-
 st.subheader("Fairness Improvement Check")
 
-if abs(dpd_final) < abs(dpd_raw):
+if abs(dpd_gender_final) < abs(dpd_gender_raw):
     st.success("✅ DPD Improved After Mitigation")
 else:
     st.error("❌ DPD Worse After Mitigation")
 
-if abs(1 - di_final) < abs(1 - di_raw):
+if abs(1 - di_gender_final) < abs(1 - di_gender_raw):
     st.success("✅ DI Improved After Mitigation")
 else:
     st.error("❌ DI Worse After Mitigation") 
